@@ -407,11 +407,11 @@ Widget locationCard(context,{locationTag,senderName}){
     ),
   );
 }
-Widget foodRequestCard(context){
+Widget foodRequestCard(context, {seekerName, requestDate, viewPersons, onPress}){
   var cWidth  =MediaQuery.of(context).size.width;
   var cHeight  =MediaQuery.of(context).size.height;
   return   Container(
-    height: cHeight*0.117,width: cWidth,
+    height: cHeight*0.13,width: cWidth,
     decoration:  BoxDecoration(
       borderRadius: BorderRadius.circular(10),
       color: const Color(0XFF378C5C),
@@ -427,11 +427,11 @@ Widget foodRequestCard(context){
           children: [
             Padding(
               padding: EdgeInsets.only(top: cHeight*0.018,left: cWidth*0.04),
-              child:Text('Robert L. Johnson',style:TextConstants.foodRequestCardText ,),
+              child:Text(seekerName,style:TextConstants.foodRequestCardText ,),
             ),
             Padding(
               padding: EdgeInsets.only(top: cHeight*0.00,left: cWidth*0.04),
-              child:Text('20 May 2022',style:TextConstants.foodRequestCardSmallText ,),
+              child:Text(requestDate,style:TextConstants.foodRequestCardSmallText ,),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -445,7 +445,7 @@ Widget foodRequestCard(context){
                         padding:  EdgeInsets.only(left:cWidth*0.03),
                         child:  Icon(Icons.remove_red_eye,color: Colors.white,size: 20,),
                       ),
-                      const Text('12',style: TextStyle(color:Colors.white ,fontWeight: FontWeight.w700,fontSize: 12),)
+                       Text(viewPersons,style: TextStyle(color:Colors.white ,fontWeight: FontWeight.w700,fontSize: 12),)
                     ],
 
                   ),
@@ -453,7 +453,7 @@ Widget foodRequestCard(context){
                 // SizedBox(width: 60,),
                 Padding(
                   padding:  EdgeInsets.only(top: cHeight*0.001,left: cWidth*0.2),
-                  child: TextButton(onPressed: (){}, child: Text('View Details',style:TextConstants.foodRequestCardViewDetails),),
+                  child: TextButton(onPressed: onPress, child: Text('View Details',style:TextConstants.foodRequestCardViewDetails),),
                 )
               ],
             )
@@ -465,14 +465,14 @@ Widget foodRequestCard(context){
   );
 }
 
-Widget foodRequestFloatingButton(context,{onPressed}){
+Widget foodRequestFloatingButton(context,{onPressed,backgroundColor,iconColor}){
   var cWidth  =MediaQuery.of(context).size.width;
   var cHeight  =MediaQuery.of(context).size.height;
   return   FloatingActionButton(
-    backgroundColor: const Color(0xFF378C5C),
+    backgroundColor: backgroundColor,
 
     onPressed:onPressed,
-    child: const Icon(Icons.add,size: 40,),
+    child:  Icon(Icons.add,size: 40,color: iconColor,),
   );
 }
 
@@ -546,45 +546,80 @@ Widget foodRequestSearchBar(context,{onTap}){
 
 
 Widget notificationCard(context,{onTap,text,color}){
-  return Container(
-      height: MediaQuery.of(context).size.height*0.08,
-      width: MediaQuery.of(context).size.width*0.04,
-      decoration:  const BoxDecoration(
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
-          color: Color(0xffF1F1F1),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, spreadRadius: 2,blurRadius: 3,offset: Offset(0, 3),)
-        ]
-      ),
-      child: Padding(
-        padding:  const EdgeInsets.only(left: 28.0,),
-        child: Row(
-          children: [
-            Padding(
-              padding:  const EdgeInsets.only(bottom: 0.0),
-              child: DotsIndicator(
-                onTap: onTap ,
-                dotsCount: 1,
-                position: 0,
-                decorator:   DotsDecorator(
-                  color: Colors.black87, // Inactive color
-                  activeColor: color,
+  return Column(
+    children: [
+      Container(
+          height: MediaQuery.of(context).size.height*0.08,
+          width: MediaQuery.of(context).size.width,
+          decoration:  const BoxDecoration(
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(20)),
+              color: Color(0xffF1F1F1),
+              boxShadow: [
+                BoxShadow(color: Colors.black12, spreadRadius: 2,blurRadius: 3,offset: Offset(0, 3),)
+              ]
+          ),
+          child: Padding(
+            padding:  const EdgeInsets.only(left: 28.0,),
+            child: Row(
+              children: [
+                Padding(
+                  padding:  const EdgeInsets.only(bottom: 0.0),
+                  child: DotsIndicator(
+                    onTap: onTap ,
+                    dotsCount: 1,
+                    position: 0,
+                    decorator:   DotsDecorator(
+                      color: Colors.black87, // Inactive color
+                      activeColor: color,
 
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width*0.83,
+                  child:  Padding(
+                    padding:  const EdgeInsets.only(left: 5.0),
+                    child: Text(text,style: const TextStyle(color: Color(0xff2A2E43)
+                    )),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width*0.83,
-              child:  Padding(
-                padding:  const EdgeInsets.only(left: 5.0),
-                child: Text(text,style: const TextStyle(color: Color(0xff2A2E43)
-                )),
-              ),
-            ),
-          ],
-        ),
-      )
+          )
+      ),
+      SizedBox(height:30,)
+    ],
   );
+}
+Widget foodRequestViewDetailsCard(context,{text,sizeHeight}){
+  return  Container(
+    height: sizeHeight,
+    width: MediaQuery.of(context).size.width,
+    decoration: BoxDecoration(
+      color: const Color(0XFFF1F1F1),
+      borderRadius: BorderRadius.circular(5),
+      boxShadow: const [
+        BoxShadow(
+            color: Color(0XFF707070),
+            blurRadius: 6.0,
+            spreadRadius: 1.0,
+            offset: Offset(
+              1.0,
+              3.0,
+            )
+        ),
+      ],
+    ),
+    child: Padding(
+      padding:  const EdgeInsets.only(top: 10,left: 10),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+          child: Text(text,style: GoogleFonts.montserrat(fontWeight: FontWeight.w400))),
+    ),
+  );
+}
+Widget foodRequestViewDetailsText(context,{text}){
+  return Text(text,style: GoogleFonts.montserrat(color: const Color(0xFF2A2E43),fontSize: 12,fontWeight: FontWeight.w700),);
 }
 
 

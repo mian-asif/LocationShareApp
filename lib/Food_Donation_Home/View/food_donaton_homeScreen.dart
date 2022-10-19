@@ -83,7 +83,7 @@ class _FoodDonationHomeScreenState extends State<FoodDonationHomeScreen> {
             Padding(
               padding:  EdgeInsets.only(top: cHeight*0.08),
               child: Center(child: customButton(onPressed: (){
-                Get.to(const FoodRequestScreen());
+                Get.to(const FoodRequestScreen(), arguments: [donateButtonPress,requestButtonPress]);
               },buttonTittle: 'Continue')),
             )
 

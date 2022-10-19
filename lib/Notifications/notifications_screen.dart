@@ -117,7 +117,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           var msg = doc['msg'];
                           var receiverNumber = doc['receiverNumber'];
                           var  docID = (doc.id);
-                          return  notificationCard(context,color: Colors.black,text: '$senderName$msg');
+                          return  notificationCard(context,color: Colors.green,text: '$senderName$msg');
                         });
                   } else {
                     return const Text('noData');

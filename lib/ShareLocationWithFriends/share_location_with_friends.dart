@@ -1,3 +1,5 @@
+
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../CustomWidgets/custom_widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,7 +9,7 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
 
 class ShareLocationWithFriends extends StatefulWidget {
@@ -24,6 +26,7 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
     // TODO: implement initState
     super.initState();
     getCurrentUser();
+    getUsers();
   }
   var locationTag = Get.arguments[0];
   var userlocationlongitude = Get.arguments[1];
@@ -31,6 +34,11 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
   var myPhone='';
   var myEmail='';
   var myUsername='';
+  var pushToken;
+  var msg = '';
+  var title = '';
+  var singleNumber = '';
+
   getCurrentUser() {
     User? user = firebaseAuth.currentUser;
     FirebaseFirestore.instance
@@ -80,13 +88,65 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
       'senderImage': auth.currentUser?.photoURL,
       'senderPhone': myPhone,
       'status': false,
-      'msg': ' just shared a new location with you with the name of ',
+      'msg': ' just shared a new location with you with the name of $locationTag ',
       'receiverNumber': receiverNumber.replaceAll(RegExp(' '), ''),
-    })
+    },
+
+    )
+
         .then((value) => debugPrint("User Added"))
         .catchError((error) => debugPrint("Failed to add user: $error"));
+
+
   }
 
+  Future<void> sendPushMessageFirebaseFunction(pushToken, msg, title) async {
+    if (pushToken == null) {
+      print('Unable to send FCM message, no token exists.');
+      return;
+    }
+    try {
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+// This is the Server key from the firebase messaging settings
+          'key=AAAAL4X7W9o:APA91bFc6eWmVO3FIlo_9z8VUH_XZ4LrGQ_l-GtJ_oXOow-brlA6Mg6LRkBVPYOXixZekdTIHsisnzFvuOaZpgbLr1KgDMM5EBl0t9ogRV5vLuUvNuz4NKthbv03h214yfV9l1cnVdjF',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{
+              'body': '${auth.currentUser?.displayName}Send You New Location',
+              'title': 'New Request'
+            },
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            },
+            'to': pushToken,
+          },
+        ),
+      );
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  getUsers() {
+    FirebaseFirestore.instance
+        .collection('users')
+        .where("phone", isEqualTo: singleNumber)
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((doc) {
+        pushToken = doc['pushToken'];
+        if (kDebugMode) {
+          print('hello:$pushToken');
+        }
+      });
+    });
+  }
   final FirebaseAuth auth = FirebaseAuth.instance;
   @override
   Widget build(BuildContext context) {
@@ -145,7 +205,8 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
                           addLocation(receiverEmail,receiverName,receiverUid,receiverProfile,senderPhone);
                           addNotification(senderPhone);
                           print('location');
-                        },name: 'Asf',buttonName: 'Send' );
+                          sendPushMessageFirebaseFunction(pushToken, msg, title);
+                        },name: receiverName,buttonName: 'Send' );
                       });
                 } else {
                   return Text("No data");

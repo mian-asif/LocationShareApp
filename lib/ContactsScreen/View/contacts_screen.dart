@@ -26,6 +26,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     // TODO: implement initState
     super.initState();
     getRequestData();
+    getFriendData();
     getCurrentUser();
     getUsers();
     getContact();
@@ -40,8 +41,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
   late List firebasePhoneNumber = [];
   late List docData = [];
   var reqSenderNumber = '';
-  var pushToken;
   var singleNumber;
+  var pushToken;
   var msg = '';
   var title = '';
   String myId = '';
@@ -52,8 +53,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
   List allPhonesData = [];
 
   var friendStatus;
+  var friendStatusp;
   var requestStatus;
   var receiverNumber;
+  var senderPhone;
   var senderNumber;
 
   void getContact() async {
@@ -98,6 +101,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
           friendStatus = userData['friend_status'];
           requestStatus = userData['request_status'];
           receiverNumber = userData['receiver_number'];
+          senderPhone = userData['sender_Phone'];
+        });
+      });
+    });
+  }
+  getFriendData() {
+    FirebaseFirestore.instance
+    .collection('friends').where('combNumbers',arrayContainsAny: [myPhone])
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((userData) {
+        setState(() {
+          friendStatusp = userData['friend_status'];
         });
       });
     });
@@ -286,6 +302,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                 left: cWidth * 0.04,
                               ),
                               child:
+                              // friendStatusp == null ?
                               ElevatedButton(
                                   onPressed: () async {
                                     print(myUsername);
@@ -313,8 +330,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                         .then((value) => print("User Added"))
                                         .catchError((error) => print(
                                             "Failed to add user: $error"));
-                                    sendPushMessageFirebaseFunction(
-                                        pushToken, msg, title);
+                                    sendPushMessageFirebaseFunction(pushToken, msg, title);
                                   },
                                   style: ElevatedButton.styleFrom(
                                     primary: Color(0xFF0091C4),
@@ -330,7 +346,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
                                   child:
 
-                                Text( requestStatus == false && receiverNumber == num ?  'Pending': 'Add',
+                                Text( requestStatus == false ?  'Pending': friendStatus == null || false ?'Add':'Friends',
                                       style: GoogleFonts.quicksand(
                                           color: Colors.white))
 
