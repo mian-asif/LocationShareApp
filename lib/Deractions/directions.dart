@@ -8,6 +8,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,6 +27,7 @@ class _DirectionsState extends State<Directions> {
   late Position currentPosition;
   String? currentAddress;
   var userlocation;
+  late bool loading=false;
   var placemarks = placemarkFromCoordinates(52.2165157, 6.9437819);
   var cUserserlocationlatitude;
   var cUserserlocationlongitude;
@@ -54,6 +56,7 @@ class _DirectionsState extends State<Directions> {
   @override
   void initState() {
     super.initState();
+    loading=true;
 
     _getAddressFromLatLng(_position);
     setSourceAndDestinationIcons();
@@ -69,10 +72,12 @@ class _DirectionsState extends State<Directions> {
       Placemark place = placemarks[0];
       setState(() {
         currentAddress = '${place.street}, ${place.subLocality},${place.subAdministrativeArea}, ${place.postalCode}';
+        loading=false;
       });
     }).catchError((e) {
       debugPrint(e);
     });
+
   }
 
   void setSourceAndDestinationIcons() async {
@@ -130,7 +135,10 @@ class _DirectionsState extends State<Directions> {
                             border: Border.all(color: Colors.grey),
 
                           ),
-                          child: Center(child: Text('$currentAddress',style: const TextStyle(color: Colors.black,fontSize: 12))),
+                          child:loading ? LoadingAnimationWidget.staggeredDotsWave(
+                            color: Colors.greenAccent,
+                            size: 20,
+                          ): Center(child: Text('$currentAddress',style: const TextStyle(color: Colors.black,fontSize: 12))),
                         )
                     )
                   ],
@@ -255,6 +263,7 @@ class _DirectionsState extends State<Directions> {
                     width: cWidth,
                     // decoration: BoxDecoration(border: Border.all(color: const Color(0xFF707070),width: 2)),
                     child:GoogleMap(
+                      zoomControlsEnabled: false,
                         myLocationEnabled: true,
                         compassEnabled: true,
                         tiltGesturesEnabled: false,

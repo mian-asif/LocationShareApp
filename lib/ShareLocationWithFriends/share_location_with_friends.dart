@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,25 +26,27 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    loading=true;
     getCurrentUser();
     getUsers();
   }
   var locationTag = Get.arguments[0];
   var userlocationlongitude = Get.arguments[1];
   var userlocationlatitude = Get.arguments[2];
-  var myPhone='';
+  var myPhone='000';
+  var myPhone2='';
   var myEmail='';
   var myUsername='';
   var pushToken;
   var msg = '';
   var title = '';
   var singleNumber = '';
-
-  getCurrentUser() {
+late bool loading;
+  getCurrentUser() async {
     User? user = firebaseAuth.currentUser;
-    FirebaseFirestore.instance
+    await FirebaseFirestore.instance
         .collection('users')
-        .where("user_uid", isEqualTo: auth.currentUser?.uid)
+        .where("email", isEqualTo: user?.email)
         .get()
         .then((QuerySnapshot querySnapshot) {
       querySnapshot.docs.forEach((userData) {
@@ -51,12 +54,13 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
           myUsername = userData['full_name'];
           myEmail = userData['email'];
           myPhone = userData['phone'];
+          loading=false;
         });
       });
     });
   }
   CollectionReference location = FirebaseFirestore.instance.collection('locations');
-  Future<void> addLocation(receiverEmail,receiverName,receiverUid,receiverProfile,senderPhone) {
+  Future<void> addLocation(receiverEmail,receiverName,receiverUid,receiverProfile,senderPhone,myNumber,friendEmail) {
     // Call the user's CollectionReference to add a new user
     return location
         .add({
@@ -73,6 +77,8 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
       'receiverEmail': receiverEmail,
       'receiverPhone': senderPhone,
       'locationTag': locationTag.toString(),
+      'friendEmail': friendEmail,
+      'numbers':[senderPhone,myNumber]
       // 'locationTag': locationTag,
     })
         .then((value) => print("User Added"))
@@ -153,7 +159,20 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
 
     var cWidth= MediaQuery.of(context).size.width;
     var cHeight= MediaQuery.of(context).size.height;
-    return Scaffold(
+    return loading ? Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Center(
+            child: LoadingAnimationWidget.staggeredDotsWave(
+              color: Colors.greenAccent,
+              size: 50,
+            ),
+          ),
+        ],
+      ),
+    ) :  Scaffold(
       appBar: AppBar(
         leading: IconButton(onPressed: (){
           Get.back();
@@ -189,7 +208,7 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
             height: cHeight*0.5,
             width: cWidth,
             child:  StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('friends').where('myUid',isEqualTo: auth.currentUser?.uid).snapshots(),
+              stream: FirebaseFirestore.instance.collection('users').doc(myPhone).collection('friends').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return ListView.builder(
@@ -197,16 +216,18 @@ class _ShareLocationWithFriendsState extends State<ShareLocationWithFriends> {
                       itemBuilder: (context, index) {
                         DocumentSnapshot doc = snapshot.data!.docs[index];
                         var  receiverEmail = (doc['senderEmail']);
-                        var  receiverName = (doc['senderName']);
+                        var  friendName = (doc['friendName']);
                         var  receiverUid = (doc['senderUid']);
                         var  receiverProfile = (doc['sender_Profile']);
                         var  senderPhone = (doc['sender_Phone']);
+                        var  myNumber = (doc['myNumber']);
+                        var  friendEmail = (doc['friendEmail']);
                         return friendRequestCard(context,onPressed: (){
-                          addLocation(receiverEmail,receiverName,receiverUid,receiverProfile,senderPhone);
+                          addLocation(receiverEmail,friendName,receiverUid,receiverProfile,senderPhone,myNumber,friendEmail);
                           addNotification(senderPhone);
                           print('location');
                           sendPushMessageFirebaseFunction(pushToken, msg, title);
-                        },name: receiverName,buttonName: 'Send' );
+                        },name: friendName,buttonName: 'Send' );
                       });
                 } else {
                   return Text("No data");

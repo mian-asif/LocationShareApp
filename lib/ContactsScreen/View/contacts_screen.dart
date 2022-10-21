@@ -7,6 +7,7 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../Model/userModel.dart';
 
 import 'package:flutter/foundation.dart';
@@ -22,9 +23,11 @@ class _ContactsScreenState extends State<ContactsScreen> {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   @override
+  late bool loading;
   void initState() {
     // TODO: implement initState
     super.initState();
+    loading=true;
     getRequestData();
     getFriendData();
     getCurrentUser();
@@ -52,6 +55,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   var myUrlAvatar = '';
   List allPhonesData = [];
 
+
   var friendStatus;
   var friendStatusp;
   var requestStatus;
@@ -68,6 +72,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         setState(() {
           allPhonesData.add(mobileContacts![i].phones.first.normalizedNumber);
           allPhonesData.add(mobileContacts![i].phones.first.number.replaceAll(RegExp(' +'), ''));
+          loading=false;
         });
       }
 
@@ -140,7 +145,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   getFirebaseNumbers() {
     FirebaseFirestore.instance
-        .collection('phoneData')
+        .collection('phoneData').where('phone',isNotEqualTo: myPhone)
         .get()
         .then((QuerySnapshot querySnapshot) {
       for (int i = 0; i < querySnapshot.docs.length; i++) {
@@ -223,14 +228,27 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget build(BuildContext context) {
     var cWidth = MediaQuery.of(context).size.width;
     var cHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return loading?Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Center(
+            child: LoadingAnimationWidget.staggeredDotsWave(
+              color: Colors.greenAccent,
+              size: 50,
+            ),
+          )
+        ],
+      ),
+     ): Scaffold(
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         body: (mobileContacts) == null
-            ? Center(child: const CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : ListView.builder(
                 itemCount: mobileContacts!.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -302,7 +320,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                 left: cWidth * 0.04,
                               ),
                               child:
-                              // friendStatusp == null ?
                               ElevatedButton(
                                   onPressed: () async {
                                     print(myUsername);
@@ -351,22 +368,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                           color: Colors.white))
 
                               )
-                              //     : ElevatedButton(
-                              //   onPressed: (){},
-                              //     style: ElevatedButton.styleFrom(
-                              //       primary: Color(0xFF0091C4),
-                              //       onPrimary: Colors.white,
-                              //       shadowColor: Color(0xFF0091C4),
-                              //       elevation: 2,
-                              //       shape: RoundedRectangleBorder(
-                              //           borderRadius:
-                              //           BorderRadius.circular(32.0)),
-                              //       minimumSize: Size(85, 35), //////// HERE
-                              //     ),
-                              //     child: Text('Friend',
-                              //         style: GoogleFonts.quicksand(
-                              //             color: Colors.white))
-                              // )
                           )
                         ],
                       ),

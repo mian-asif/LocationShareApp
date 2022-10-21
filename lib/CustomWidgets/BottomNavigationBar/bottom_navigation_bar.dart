@@ -63,7 +63,7 @@ class _BottomNavBar extends State<BottomNavBarScreen> with SingleTickerProviderS
           bottomRight: Radius.circular(0),
           bottomLeft: Radius.circular(0),
         ),
-        shadowColor: Colors.white,
+        shadowColor: Colors.transparent,
         elevation: 10,
       ),
       body: TabBarView(

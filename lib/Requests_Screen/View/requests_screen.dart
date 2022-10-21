@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../CustomWidgets/custom_widgets.dart';
+import 'package:empty_widget/empty_widget.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({Key? key}) : super(key: key);
 
@@ -82,9 +84,32 @@ addFriend() {
             child:  StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('requests').
               where('userid',isNotEqualTo: auth.currentUser?.uid ).
-              where('receiver_numberWithoutSpace',isEqualTo: myPhone ).snapshots(),
+              where('receiver_numberWithoutSpace',isEqualTo: myPhone ).where('request_status',isEqualTo: false).snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                var snapm = snapshot.data?.docs.isNotEmpty;
+                var snapt = snapshot.data?.docs.isEmpty;
+                if (snapt == true ) {
+
+                  return  EmptyWidget(
+
+                    image: null,
+                    packageImage: PackageImage.Image_2,
+                    title: 'No Requests',
+                    subTitle: 'You Have No Requests \n  yet',
+                    titleTextStyle: const TextStyle(
+                      fontSize: 22,
+                      color: Color(0xff9da9c7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    subtitleTextStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xffabb8d6),
+                    ),
+                  ) ;
+                }
+                else if(snapm == true ) {
+                  // got data from snapshot but it is empty
+
                   return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
@@ -99,38 +124,68 @@ addFriend() {
                         var  docID = (doc.id);
                         return
                           requestStatus== false?  friendRequestCard(context,buttonName: 'Accept',name: senderName,onPressed: (){
-                          var collection = FirebaseFirestore.instance.collection('requests');
-                          collection
-                              .doc(docID)
-                              .update({'request_status' : true,'friend_status' : true,}) // <-- Updated data
-                              .then((_) => print('Success'))
-                              .catchError((error) => print('Failed: $error'));
+                            var collections = FirebaseFirestore.instance.collection('requests');
+                            collections
+                                .doc(docID)
+                                .update({'request_status' : true,'friend_status' : true,}) // <-- Updated data
+                                .then((_) => print('Success'))
+                                .catchError((error) => print('Failed: $error'));
 
 
-                          FirebaseFirestore.instance.collection('friends')
-                              .add({
-                            'myName': auth.currentUser?.displayName,
-                            'myEmail': auth.currentUser?.email,
-                            'myUid': auth.currentUser?.uid,
-                            'combNumbers': [myPhone,senderPhone],
-                            'acceptUid': auth.currentUser?.uid,
-                            'myPhotoURL': auth.currentUser?.photoURL,
-                            'friend_status': true,
-                            'myNumber': myPhone,
-                            'sender_Phone': senderPhone,
-                            'senderName': senderName,
-                            'senderEmail': senderEmail,
-                            'sender_Profile': senderProfile,
-                            'senderUid': userid,
-                          })
-                              .then((value) => print("User Added"))
-                              .catchError((error) => print("Failed to add user: $error"));
-                          addNotification(senderPhone);
+                            FirebaseFirestore.instance.collection('users').doc(myPhone).collection('friends')
+                                .add({
+                              'myName': auth.currentUser?.displayName,
+                              'myEmail': auth.currentUser?.email,
+                              'myUid': auth.currentUser?.uid,
+                              'combNumbers': [myPhone,senderPhone],
+                              'acceptUid': auth.currentUser?.uid,
+                              'myPhotoURL': auth.currentUser?.photoURL,
+                              'friend_status': true,
+                              'myNumber': myPhone,
+                              'sender_Phone': senderPhone,
+                              'friendName': senderName,
+                              'senderEmail': senderEmail,
+                              'sender_Profile': senderProfile,
+                              'friendEmail': senderEmail,
+                              'senderUid': userid,
+                            })
+                                .then((value) => print("User Added"))
+                                .catchError((error) => print("Failed to add user: $error"));
+                            addNotification(senderPhone);
 
-                        }):Container();
-                      });
-                } else {
-                  return Text("No data");
+
+
+                            FirebaseFirestore.instance.collection('users').doc(senderPhone).collection('friends')
+                                .add({
+                              'myName': auth.currentUser?.displayName,
+                              'myEmail': auth.currentUser?.email,
+                              'myUid': auth.currentUser?.uid,
+                              'combNumbers': [myPhone,senderPhone],
+                              'acceptUid': auth.currentUser?.uid,
+                              'myPhotoURL': auth.currentUser?.photoURL,
+                              'friend_status': true,
+                              'myNumber': myPhone,
+                              'sender_Phone': senderPhone,
+                              'friendName': myUsername,
+                              'senderEmail': senderEmail,
+                              'friendEmail': auth.currentUser?.email,
+                              'sender_Profile': senderProfile,
+                              'senderUid': userid,
+                            })
+                                .then((value) => print("User Added"))
+                                .catchError((error) => print("Failed to add user: $error"));
+                            addNotification(senderPhone);
+
+                          }):Container();
+                      }) ;
+                }
+                else {
+                  return Center(
+                    child: LoadingAnimationWidget.staggeredDotsWave(
+                      color: Colors.greenAccent,
+                      size: 50,
+                    ),
+                  );
                 }
               },
             ),

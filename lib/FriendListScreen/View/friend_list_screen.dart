@@ -7,6 +7,7 @@ import '../../ContactsScreen/View/contacts_screen.dart';
 import '../../CustomWidgets/custom_indecatior.dart';
 import '../../FriendsScreen/View/firends_screen.dart';
 import '../../Requests_Screen/View/requests_screen.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class FriendListScreen extends StatefulWidget {
   const FriendListScreen({Key? key}) : super(key: key);
@@ -17,23 +18,49 @@ class FriendListScreen extends StatefulWidget {
 
 class _FriendListScreenState extends State<FriendListScreen> {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   var friendTotal=0;
+  var myPhone;
+  var myEmail='';
+  var myUsername='';
+  late bool loading;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getTotalFriends();
+    loading=true;
+    getCurrentUser();
+
   }
-  getTotalFriends() {
-    FirebaseFirestore.instance
-        .collection('friends')
+  getCurrentUser() async {
+    User? user = firebaseAuth.currentUser;
+     await FirebaseFirestore.instance
+        .collection('users')
+        .where("email", isEqualTo: user?.email)
         .get()
         .then((QuerySnapshot querySnapshot) {
       querySnapshot.docs.forEach((userData) {
         setState(() {
-          friendTotal = querySnapshot.docs.length;
+          myUsername = userData['full_name'];
+          myEmail = userData['email'];
+          myPhone = userData['phone'];
+          print(myPhone);
         });
+      });
+    });
+    getTotalFriends();
+  }
+  getTotalFriends() async {
+    await FirebaseFirestore.instance
+        .collection('users').doc(myPhone).collection('friends')
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      setState(() {
+        friendTotal = querySnapshot.docs.length;
+        print('friendTotal $friendTotal');
+        loading=false;
+
       });
     });
   }
@@ -91,7 +118,13 @@ var cHeight= MediaQuery.of(context).size.height;
                       24,color: Color(0XFF0091C4),fontWeight: FontWeight.bold),
                       ),
                     ),
-                    Padding(
+                   loading ? Padding(
+                     padding:  EdgeInsets.only(left: cWidth*0.15),
+                     child: LoadingAnimationWidget.staggeredDotsWave(
+                       color: Colors.greenAccent,
+                       size: 20,
+                     ),
+                   ) : Padding(
                       padding:  EdgeInsets.only(
                           left: cWidth*0.11
                       ),

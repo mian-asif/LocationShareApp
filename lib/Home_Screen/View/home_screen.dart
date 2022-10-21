@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,10 @@ import '../../LogIn-Screen/View/login_screen.dart';
 import '../../ShareLocationWithFriends/share_location_with_friends.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -21,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final user = FirebaseAuth.instance.currentUser;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   TextEditingController dateController = TextEditingController();
   TextEditingController locationTextFieldController = TextEditingController();
@@ -31,10 +37,14 @@ class _HomeScreenState extends State<HomeScreen> {
     getCurrentUser();
   }
   var myPhone='';
+  var myPhoto='';
   var myEmail='';
   var myUsername='';
-  getCurrentUser() {
-    FirebaseFirestore.instance
+  var image;
+  var image_url;
+  var imagedisply;
+  getCurrentUser() async {
+   await FirebaseFirestore.instance
         .collection('users')
         .where("user_uid", isEqualTo: auth.currentUser?.uid)
         .get()
@@ -44,10 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
           myUsername = userData['full_name'];
           myEmail = userData['email'];
           myPhone = userData['phone'];
+          myPhoto = userData['photoURL'];
         });
       });
     });
   }
+  final ImagePicker imagePicker = ImagePicker();
+  bool loading=false;
+  late bool loadingformap=false;
+  late File file;
+  late String imageUrl;
   var userlocation;
   var userlocationlongitude;
   var userlocationlatitude;
@@ -191,6 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     var cHeight=MediaQuery.of(context).size.height;
@@ -222,14 +239,89 @@ class _HomeScreenState extends State<HomeScreen> {
                          child: Column(
                            crossAxisAlignment: CrossAxisAlignment.start,
                            children: [
-                             Container(
+                             InkWell(
+                               onTap: () async {
+                                 setState((){
+                                   loading=true;
+                                 });
+                                 image = await imagePicker.pickImage(source: ImageSource.gallery);
+                                 var imageFile = File(image!.path);
+                                 String fileName = (imageFile.path);
+                                 setState((){
+                                  imagedisply= imageFile;
+                                 });
+                                 FirebaseStorage storage = FirebaseStorage.instance;
+                                 Reference ref = storage.ref().child("ProfileImage-$fileName");
+                                 UploadTask uploadTask = ref.putFile(imageFile);
+                                 await uploadTask.whenComplete(() async {
+                                   var url = await ref.getDownloadURL();
+                                   image_url = url.toString();
+                                   print(image_url.toString());
+                                   await user?.updatePhotoURL(image_url);
+                                   print(auth.currentUser?.photoURL.toString());
 
-                               height: 64,
-                               width: 64,
-                               decoration: BoxDecoration(
-                                   color: Colors.blue,
-                                   borderRadius: BorderRadius.circular(10)
-                               ),
+                                  await FirebaseFirestore.instance.collection('users')
+                                       .where('user_uid', isEqualTo: auth.currentUser?.uid).get()
+                                       .then((querySnapshot) {
+                                     querySnapshot.docs.forEach((documentSnapshot) {
+                                       documentSnapshot.reference.update({
+                                         'photoURL' : image_url
+                                       });
+                                     });
+                                   });
+                                   setState((){
+                                     loading=false;
+
+                                   });
+
+                                 }).catchError((onError) {
+                                   print(onError);
+                                 });
+
+
+
+                               },
+                               child: myPhoto!= null?
+                               Container(
+
+                                 height: 64,
+                                 width: 64,
+                                 decoration: BoxDecoration(
+                                   borderRadius: BorderRadius.circular(10),
+                                 ),
+                                 child:  ClipRRect(
+                                     borderRadius: BorderRadius.circular(10),
+                                     child:CachedNetworkImage(
+                                       imageUrl: myPhoto,fit: BoxFit.cover,
+                                       placeholder: (context, url) => Image.asset('assets/images/loaging.gif'),
+                                       errorWidget: (context, url, error) => Container(
+
+                                         height: 64,
+                                         width: 64,
+                                         decoration: BoxDecoration(
+                                           color: Colors.white54,
+                                           borderRadius: BorderRadius.circular(10),
+                                         ),
+                                         child:  ClipRRect(
+                                           borderRadius: BorderRadius.circular(10),
+                                           child:Image.asset('assets/images/applogo.png'),
+                                         ),
+                                       ),
+                                     ),
+                                 ),
+                               ):Container(
+
+                                 height: 64,
+                                 width: 64,
+                                 decoration: BoxDecoration(
+                                   borderRadius: BorderRadius.circular(10),
+                                 ),
+                                 child:  ClipRRect(
+                                   borderRadius: BorderRadius.circular(10),
+                                   child:Image.asset('assets/images/applogo.png'),
+                                 ),
+                               )
+
                              ),
                              Padding(
                                padding: const EdgeInsets.only(top: 8.0),
@@ -257,14 +349,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding:  EdgeInsets.only(left: 18.0,top: 10),
+              padding:  EdgeInsets.only(left: 18.0,top: cHeight*0.38),
               child: TextButton(onPressed: (){}, child: Text('Profile',style: const TextStyle(
                 fontWeight: FontWeight.w400,color: Colors.white,
                 fontSize: 20
               ),)),
             ),
             Padding(
-              padding:  EdgeInsets.only(left: 18.0,top: 10),
+              padding:  EdgeInsets.only(left: 18.0,top: 5),
               child: TextButton(onPressed: (){
                 logout();
               }, child: Text('Logout',style: const TextStyle(
@@ -329,11 +421,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   backgroundColor: const Color(0XFFFFFFFF),
                   onPressed: () async {
+                    setState((){
+                      loadingformap=true;
+                    });
+
                     Position currentPosition = await getGeoLocationPosition();
                     setState((){
+
                      userlocation =  currentPosition;
                      userlocationlatitude =  currentPosition.latitude;
                      userlocationlongitude =  currentPosition.longitude;
+                     loadingformap=false;
                     });
                    if (kDebugMode) {
                      // print(currentPosition.latitude);
@@ -350,7 +448,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
                   },
-                  child: const Icon(Icons.my_location,color: Color(0XFF0091C4),size: 35),
+                  child:loadingformap? LoadingAnimationWidget.staggeredDotsWave(
+                    color: Colors.greenAccent,
+                    size: 20,
+                  ): Icon(Icons.my_location,color: Color(0XFF0091C4),size: 35),
                 ),
               ),
             ],

@@ -4,6 +4,8 @@ import 'package:contacts_service/contacts_service.dart';
 import '../../CustomWidgets/custom_widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:empty_widget/empty_widget.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({Key? key}) : super(key: key);
 
@@ -20,12 +22,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
     super.initState();
     getCurrentUser();
   }
-  var myPhone='';
+  var myPhone='000';
   var myEmail='';
   var myUsername='';
-  getCurrentUser() {
-    User? user = firebaseAuth.currentUser;
-    FirebaseFirestore.instance
+  getCurrentUser() async {
+  await  FirebaseFirestore.instance
         .collection('users')
         .where("user_uid", isEqualTo: auth.currentUser?.uid)
         .get()
@@ -76,9 +77,32 @@ class _FriendsScreenState extends State<FriendsScreen> {
             height: cHeight*0.5,
             width: cWidth,
             child:  StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('friends').where('combNumbers',arrayContainsAny: [myPhone]).snapshots(),
+              stream: FirebaseFirestore.instance.collection('users').doc(myPhone).collection('friends').snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                var snapm = snapshot.data?.docs.isNotEmpty;
+                var snapt = snapshot.data?.docs.isEmpty;
+                if (snapt == true ) {
+
+                  return EmptyWidget(
+
+                    image: null,
+                    packageImage: PackageImage.Image_3,
+                    title: 'No Friends',
+                    subTitle: 'You Have No Friends \n  yet',
+                    titleTextStyle: const TextStyle(
+                      fontSize: 22,
+                      color: Color(0xff9da9c7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    subtitleTextStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xffabb8d6),
+                    ),
+                  ) ;
+                }
+                else if(snapm == true ) {
+                  // got data from snapshot but it is empty
+
                   return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
@@ -89,14 +113,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         var  myPhotoURL = (doc['myPhotoURL']);
                         var  myUid = (doc['myUid']);
                         var  senderEmail = (doc['senderEmail']);
-                        var  senderName = (doc['senderName']);
+                        var  friendName = (doc['friendName']);
                         var  senderUid = (doc['senderUid']);
                         var  senderProfile = (doc['sender_Profile']);
+                        var  friendEmail = (doc['friendEmail']);
                         var  totalFriends  = (snapshot.data?.docs.length);
-                        return friendProfileCard(context,FriendName:senderName, );
-                      });
-                } else {
-                  return Text("No data");
+                        return friendProfileCard(context,FriendName:friendName, );
+                      }) ;
+                }
+                else {
+
+                  return Center(
+                    child: LoadingAnimationWidget.staggeredDotsWave(
+                      color: Colors.greenAccent,
+                      size: 50,
+                    ),
+                  ) ;
                 }
               },
             ),

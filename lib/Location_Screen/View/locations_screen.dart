@@ -8,6 +8,8 @@ import 'package:locate_family/Deractions/directions.dart';
 import '../../CustomWidgets/custom_widgets.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:empty_widget/empty_widget.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 class LocationsScreen extends StatefulWidget {
   const LocationsScreen({Key? key}) : super(key: key);
 
@@ -21,11 +23,32 @@ class _LocationsScreenState extends State<LocationsScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    getCurrentUser();
+
+
 
 
   }
 
   Position? _position;
+  var myPhone='000';
+  var myEmail='';
+  var myUsername='';
+  getCurrentUser() async {
+   await FirebaseFirestore.instance
+        .collection('users')
+        .where("user_uid", isEqualTo: auth.currentUser?.uid)
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      querySnapshot.docs.forEach((userData) {
+        setState(() {
+          myUsername = userData['full_name'];
+          myEmail = userData['email'];
+          myPhone = userData['phone'];
+        });
+      });
+    });
+  }
   void _getCurrentLocation() async {
     Position position = await _determinePosition();
     setState(() {
@@ -88,9 +111,31 @@ class _LocationsScreenState extends State<LocationsScreen> {
             SizedBox(
               height: cHeight*0.7,
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('locations').where('receiverEmail',isEqualTo: auth.currentUser?.email).snapshots(),
+                stream: FirebaseFirestore.instance.collection('locations').where('friendEmail',isEqualTo: myEmail).snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
+                  var snapm = snapshot.data?.docs.isNotEmpty;
+                  var snapt = snapshot.data?.docs.isEmpty;
+                  if (snapt == true) {
+                    return EmptyWidget(
+
+                      image: null,
+                      packageImage: PackageImage.Image_4,
+                      title: 'No Locations',
+                      subTitle: 'You Have No Locations \n  yet',
+                      titleTextStyle: const TextStyle(
+                        fontSize: 22,
+                        color: Color(0xff9da9c7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      subtitleTextStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xffabb8d6),
+                      ),
+                    );
+                  }
+                  else if(snapm == true) {
+                    // got data from snapshot but it is empty
+
                     return ListView.builder(
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) {
@@ -110,13 +155,19 @@ class _LocationsScreenState extends State<LocationsScreen> {
                           var  userlocationlongitude = (doc['userlocationlongitude']);
                           var  docID = (doc.id);
                           return  InkWell(
-                            onTap: (){
-                              Get.to(const Directions(),arguments: [userlocationlatitude,userlocationlongitude,cUserserlocationlatitude,cUserserlocationlongitude,_position,locationTag],);
-                            },
+                              onTap: (){
+                                Get.to(const Directions(),arguments: [userlocationlatitude,userlocationlongitude,cUserserlocationlatitude,cUserserlocationlongitude,_position,locationTag],);
+                              },
                               child: locationCard(context,locationTag: locationTag,senderName: senderName));
-                        });
-                  } else {
-                    return const Center(child: Text("No data"));
+                        }) ;
+                  }
+                  else {
+                    return Center(
+                      child: LoadingAnimationWidget.staggeredDotsWave(
+                        color: Colors.greenAccent,
+                        size: 50,
+                      ),
+                    );
                   }
                 },
               ),

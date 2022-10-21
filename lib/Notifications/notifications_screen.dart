@@ -7,8 +7,11 @@ import 'package:dots_indicator/dots_indicator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:locate_family/Deractions/directions.dart';
 import '../../CustomWidgets/custom_widgets.dart';
+import 'package:empty_widget/empty_widget.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:animated_shimmer/animated_shimmer.dart';
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
@@ -38,6 +41,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           myUsername = userData['full_name'];
           myEmail = userData['email'];
           myPhone = userData['phone'];
+          loading=false;
           // print(myPhone);
         });
       }
@@ -47,6 +51,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   var colorsChange=Colors.green;
   var cUserserlocationlongitude;
+  bool loading=true;
   Future<Position> _determinePosition() async {
     LocationPermission permission;
     permission = await Geolocator.checkPermission();
@@ -75,7 +80,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     var cHeight=MediaQuery.of(context).size.height;
     var cWidth=MediaQuery.of(context).size.width;
-    return Scaffold(
+
+    return loading?  Scaffold(
+      body:Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Center(
+            child:   LoadingAnimationWidget.staggeredDotsWave(
+              color: Colors.greenAccent,
+              size: 50,
+            ),
+          ),
+        ],
+      )
+    ):
+    Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
         padding:  EdgeInsets.only(
@@ -104,12 +124,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('notifications').where("receiverNumber", isEqualTo: myPhone,).snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
+                  var snapm = snapshot.data?.docs.isNotEmpty;
+                  var snapt = snapshot.data?.docs.isEmpty;
+                  if (snapt == true) {
+                    return EmptyWidget(
+
+                      image: null,
+                      packageImage: PackageImage.Image_1,
+                      title: 'No notification',
+                      subTitle: 'No notification \n available yet',
+                      titleTextStyle: const TextStyle(
+                        fontSize: 22,
+                        color: Color(0xff9da9c7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      subtitleTextStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xffabb8d6),
+                      ),
+                    ) ;
+                  }
+                  else if(snapm == true ) {
+                    // got data from snapshot but it is empty
+
                     return ListView.builder(
-                        itemCount: snapshot.data!.docs.length,
+                        itemCount: snapshot.data?.docs.length,
                         itemBuilder: (context, index) {
                           DocumentSnapshot doc = snapshot.data!.docs[index];
-                         var senderName = doc['senderName'];
+                          var senderName = doc['senderName'];
                           var  senderUid = doc['senderUid'];
                           var senderPhone = doc['senderPhone'];
                           var  senderImage = doc['senderImage'];
@@ -118,9 +160,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           var receiverNumber = doc['receiverNumber'];
                           var  docID = (doc.id);
                           return  notificationCard(context,color: Colors.green,text: '$senderName$msg');
-                        });
-                  } else {
-                    return const Text('noData');
+                        }) ;
+                  }
+                  else {
+                    return Center(
+                      child: LoadingAnimationWidget.staggeredDotsWave(
+                        color: Colors.greenAccent,
+                        size: 50,
+                      ),
+                    ) ;
                   }
                 },
               ),

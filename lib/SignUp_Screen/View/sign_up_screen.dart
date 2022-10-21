@@ -97,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   }
   addUser() async {
-     FirebaseFirestore.instance.collection('users').add({
+     FirebaseFirestore.instance.collection('users').doc(phoneController.text).set({
       'full_name': fullNameController.text, // John Doe
       'phone': phoneController.text, // Stokes and Sons
       'email': emailController.text, // Stokes and Sons
