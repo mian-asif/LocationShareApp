@@ -48,7 +48,7 @@ class _BottomNavBar extends State<BottomNavBarScreen> with SingleTickerProviderS
         ],
         color: const Color(0xFF0091C4),
         height: 60,
-        circleWidth: 60,
+        circleWidth: 50,
         initIndex: tabIndex,
         onChanged: (v) {
           tabIndex = v;
@@ -58,8 +58,8 @@ class _BottomNavBar extends State<BottomNavBarScreen> with SingleTickerProviderS
         // tabCurve: ,
         padding: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
         cornerRadius: const BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
+          topLeft: Radius.circular(2),
+          topRight: Radius.circular(2),
           bottomRight: Radius.circular(0),
           bottomLeft: Radius.circular(0),
         ),

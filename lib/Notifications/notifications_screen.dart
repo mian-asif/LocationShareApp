@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:locate_family/Deractions/directions.dart';
+import 'package:locate_family/Location_Screen/View/locations_screen.dart';
+import 'package:locate_family/Requests_Screen/View/requests_screen.dart';
 import '../../CustomWidgets/custom_widgets.dart';
 import 'package:empty_widget/empty_widget.dart';
 import 'package:get/get.dart';
@@ -120,7 +122,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Text('A place to see any activity and notifications',style: TextConstants.brownText,),
             ),
             SizedBox(
-              height: cHeight*0.7,
+              height: cHeight*0.73,
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('notifications').where("receiverNumber", isEqualTo: myPhone,).snapshots(),
                 builder: (context, snapshot) {
@@ -148,6 +150,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     // got data from snapshot but it is empty
 
                     return ListView.builder(
+                      physics: BouncingScrollPhysics(),
                         itemCount: snapshot.data?.docs.length,
                         itemBuilder: (context, index) {
                           DocumentSnapshot doc = snapshot.data!.docs[index];
@@ -159,7 +162,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           var msg = doc['msg'];
                           var receiverNumber = doc['receiverNumber'];
                           var  docID = (doc.id);
-                          return  notificationCard(context,color: Colors.green,text: '$senderName$msg');
+                          return  InkWell(
+                            onTap: (){
+                              if(status == false){
+                                Get.to(const LocationsScreen());
+
+                              }
+                              else if(status == false){
+
+                                Get.to(const RequestsScreen());
+
+                              }else{
+                                return;
+                              }
+
+                            },
+                              child: notificationCard(context,color: Colors.green,text: '$senderName$msg'));
                         }) ;
                   }
                   else {

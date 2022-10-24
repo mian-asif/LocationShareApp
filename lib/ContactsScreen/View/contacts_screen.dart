@@ -217,7 +217,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
       'senderUid': auth.currentUser?.uid,
       'senderImage': auth.currentUser?.photoURL,
       'senderPhone': myPhone,
-      'status': false,
+      'status': true,
       'msg': ' sent you a friend request',
       'receiverNumber': receiverNumber.replaceAll(RegExp(' '), ''),
     })

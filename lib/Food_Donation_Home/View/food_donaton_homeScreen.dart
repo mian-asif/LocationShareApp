@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
+import 'package:locate_family/FoodDonateScreen/food_donate_screen.dart';
 import 'package:locate_family/FoodRequestScreen/View/food_request_screen.dart';
 import '../../CustomWidgets/constants.dart';
 import '../../CustomWidgets/custom_widgets.dart';
+import '../../FoodDonersDetailsScreen/View/food_doners_Details_Screen.dart';
 
 class FoodDonationHomeScreen extends StatefulWidget {
   const FoodDonationHomeScreen({Key? key}) : super(key: key);
@@ -83,7 +85,8 @@ class _FoodDonationHomeScreenState extends State<FoodDonationHomeScreen> {
             Padding(
               padding:  EdgeInsets.only(top: cHeight*0.08),
               child: Center(child: customButton(onPressed: (){
-                Get.to(const FoodRequestScreen(), arguments: [donateButtonPress,requestButtonPress]);
+                // Get.to(const FoodRequestScreen(), arguments: [donateButtonPress,requestButtonPress]);
+                Get.to( donateButtonPress == true? const FoodDonateScreen():const FoodRequestScreen(), arguments: [donateButtonPress,requestButtonPress]);
               },buttonTittle: 'Continue')),
             )
 

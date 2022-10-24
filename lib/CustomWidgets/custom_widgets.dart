@@ -619,7 +619,7 @@ Widget foodRequestViewDetailsCard(context,{text,sizeHeight}){
   );
 }
 Widget foodRequestViewDetailsText(context,{text}){
-  return Text(text,style: GoogleFonts.montserrat(color: const Color(0xFF2A2E43),fontSize: 12,fontWeight: FontWeight.w700),);
+  return Text(text,style: GoogleFonts.montserrat(color: const Color(0x0ff1f1f1),fontSize: 12,fontWeight: FontWeight.w700),);
 }
 
 
