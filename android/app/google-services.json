@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "204111305690",
+    "project_id": "locate-family-67e3d",
+    "storage_bucket": "locate-family-67e3d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204111305690:android:1c27d0165620124fe93ee3",
+        "android_client_info": {
+          "package_name": "com.locate.family"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "204111305690-m3tja1govevqmj3qgdtc8ocfsq39bba7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIgXI1KhghAeLKEah3k6gHiFcFkR7EgeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "204111305690-m3tja1govevqmj3qgdtc8ocfsq39bba7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
